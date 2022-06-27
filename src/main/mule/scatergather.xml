@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="fee40434-5a63-4fcd-97bc-163bdc3569f2" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="scatergatherFlow" doc:id="a45704b6-ddf4-4504-9474-e6c2c4b841a1" >
+		<http:listener doc:name="Listener" doc:id="22ba4e89-4357-4c24-b72f-002cb5054ef6" config-ref="HTTP_Listener_config" path="/error"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="bd5c20a0-a534-481d-83dd-ca1c9fd6cc03" />
+		<scatter-gather doc:name="Scatter-Gather" doc:id="8c626567-e12b-4c95-a224-2c949e0707b1" >
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="6da55b37-6e54-44bb-b846-5222130eb49d" url="https://timezoneapi.io/api/timezone/?Europe/Paris&amp;token=avsjdKNiTzcsGCLBWmqh"/>
+				<ee:transform doc:name="Transform Message" doc:id="177d4afe-5042-416f-8424-1820f527c9f6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    continent: payload.data.timezone.id,
+    country: payload.data.timezone.country_name,
+    date: payload.data.datetime.date,
+    time: payload.data.datetime.time,
+    day: payload.data.datetime.day_full
+
+}
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="fdf8f149-7580-4d49-a74e-cd709dd2e108" url="https://timezoneapi.io/api/timezone/?Asia/Kolkata&amp;token=avsjdKNiTzcsGCLBWmqh" />
+				<ee:transform doc:name="Transform Message" doc:id="09ccef7a-ec73-4cad-bf9c-7cbd210e630a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    continent: payload.data.timezone.id,
+    country: payload.data.timezone.country_name,
+    date: payload.data.datetime.date,
+    time: payload.data.datetime.time,
+    day: payload.data.datetime.day_full
+
+}
+
+
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="9214099e-c746-4ca7-94db-300dcd19b5aa" url="https://timezoneapi.io/api/timezone/?America/New_York&amp;token=avsjdKNiTzcsGCLBWmqh" />
+				<ee:transform doc:name="Transform Message" doc:id="075f77f0-f5da-477e-b3e2-4989c0c8a1de">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    continent: payload.data.timezone.id,
+    country: payload.data.timezone.country_name,
+    date: payload.data.datetime.date,
+    time: payload.data.datetime.time,
+    day: payload.data.datetime.day_full
+
+}
+
+
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="bae56304-6916-485e-8f65-16363c06a4ec" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload pluck ((value, key, index) ->value) ).*payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Loggerend" doc:id="c4f95f19-799e-475a-9ad7-2238b6a71de4" message="#[payload]"/>
+	</flow>
+</mule>
